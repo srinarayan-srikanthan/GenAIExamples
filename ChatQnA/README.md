@@ -6,137 +6,12 @@ RAG bridges the knowledge gap by dynamically fetching relevant information from 
 
 # Table of contents
 
-1. [Automated Terraform Deployment](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
-2. [Automated Deployment to Ubuntu based system](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
-3. [Manually Deployment](#manually-deploy-chatqna-service)
-4. [Architecture and Deploy Details](#architecture-and-deploy-details)
-5. [Consume Service](#consume-chatqna-service-with-rag)
-6. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
+1. [Architecture and Deploy Details](#architecture-and-deploy-details)
+2. [Automated Terraform Deployment](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
+3. [Automated Deployment to Ubuntu based system](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
+4. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
 
-## 🤖 Automated Terraform Deployment using Intel® Optimized Cloud Modules for **Terraform**
-
-| Cloud Provider       | Intel Architecture                | Intel Optimized Cloud Module for Terraform                                                                                         | Comments                                                             |
-| -------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| AWS                  | 4th Gen Intel Xeon with Intel AMX | [AWS Module](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna)                          | Uses meta-llama/Meta-Llama-3-8B-Instruct by default                  |
-| AWS Falcon2-11B      | 4th Gen Intel Xeon with Intel AMX | [AWS Module with Falcon11B](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna-falcon11B) | Uses TII Falcon2-11B LLM Model                                       |
-| GCP                  | 5th Gen Intel Xeon with Intel AMX | [GCP Module](https://github.com/intel/terraform-intel-gcp-vm/tree/main/examples/gen-ai-xeon-opea-chatqna)                          | Also supports Confidential AI by using Intel® TDX with 4th Gen Xeon |
-| Azure                | 5th Gen Intel Xeon with Intel AMX | Work-in-progress                                                                                                                   | Work-in-progress                                                     |
-| Intel Tiber AI Cloud | 5th Gen Intel Xeon with Intel AMX | Work-in-progress                                                                                                                   | Work-in-progress                                                     |
-
-## Automated Deployment to Ubuntu based system(if not using Terraform) using Intel® Optimized Cloud Modules for **Ansible**
-
-To deploy to existing Xeon Ubuntu based system, use our Intel Optimized Cloud Modules for Ansible. This is the same Ansible playbook used by Terraform.
-Use this if you are not using Terraform and have provisioned your system with another tool or manually including bare metal.
-| Operating System | Intel Optimized Cloud Module for Ansible |
-|------------------|------------------------------------------|
-| Ubuntu 20.04 | [ChatQnA Ansible Module](https://github.com/intel/optimized-cloud-recipes/tree/main/recipes/ai-opea-chatqna-xeon) |
-| Ubuntu 22.04 | Work-in-progress |
-
-## Manually Deploy ChatQnA Service
-
-The ChatQnA service can be effortlessly deployed on Intel Gaudi2, Intel Xeon Scalable Processors，Nvidia GPU and AMD GPU.
-
-Two types of ChatQnA pipeline are supported now: `ChatQnA with/without Rerank`. And the `ChatQnA without Rerank` pipeline (including Embedding, Retrieval, and LLM) is offered for Xeon customers who can not run rerank service on HPU yet require high performance and accuracy.
-
-Quick Start Deployment Steps:
-
-1. Set up the environment variables.
-2. Run Docker Compose.
-3. Consume the ChatQnA Service.
-
-Note:
-
-1. If you do not have docker installed you can run this script to install docker : `bash docker_compose/install_docker.sh`.
-
-2. The default LLM is `meta-llama/Meta-Llama-3-8B-Instruct`. Before deploying the application, please make sure either you've requested and been granted the access to it on [Huggingface](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) or you've downloaded the model locally from [ModelScope](https://www.modelscope.cn/models).
-
-### Quick Start: 1.Setup Environment Variable
-
-To set up environment variables for deploying ChatQnA services, follow these steps:
-
-1. Set the required environment variables:
-
-   ```bash
-   # Example: host_ip="192.168.1.1"
-   export host_ip="External_Public_IP"
-   # Example: no_proxy="localhost, 127.0.0.1, 192.168.1.1"
-   export no_proxy="Your_No_Proxy"
-   export HUGGINGFACEHUB_API_TOKEN="Your_Huggingface_API_Token"
-   ```
-
-2. If you are in a proxy environment, also set the proxy-related environment variables:
-
-   ```bash
-   export http_proxy="Your_HTTP_Proxy"
-   export https_proxy="Your_HTTPs_Proxy"
-   ```
-
-3. Set up other environment variables:
-
-   > Notice that you can only choose **one** hardware option below to set up envs according to your hardware. Make sure port numbers are set correctly as well.
-
-   ```bash
-   # on Gaudi
-   cd GenAIExamples/ChatQnA/docker_compose/intel/hpu/gaudi/
-   source ./set_env.sh
-   export no_proxy="Your_No_Proxy",chatqna-gaudi-ui-server,chatqna-gaudi-backend-server,dataprep-redis-service,tei-embedding-service,retriever,tei-reranking-service,tgi-service,vllm-service,guardrails,jaeger,prometheus,grafana,gaudi-node-exporter-1
-   # on Xeon
-   cd GenAIExamples/ChatQnA/docker_compose/intel/cpu/xeon/
-   source ./set_env.sh
-   export no_proxy="Your_No_Proxy",chatqna-xeon-ui-server,chatqna-xeon-backend-server,dataprep-redis-service,tei-embedding-service,retriever,tei-reranking-service,tgi-service,vllm-service,jaeger,prometheus,grafana,xeon-node-exporter-1
-   # on Nvidia GPU
-   cd GenAIExamples/ChatQnA/docker_compose/nvidia/gpu
-   source ./set_env.sh
-   export no_proxy="Your_No_Proxy",chatqna-ui-server,chatqna-backend-server,dataprep-redis-service,tei-embedding-service,retriever,tei-reranking-service,tgi-service
-   ```
-
-### Quick Start: 2.Run Docker Compose
-
-Select the compose.yaml file that matches your hardware.
-
-CPU example:
-
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/intel/cpu/xeon/
-# cd GenAIExamples/ChatQnA/docker_compose/intel/hpu/gaudi/
-# cd GenAIExamples/ChatQnA/docker_compose/nvidia/gpu/
-docker compose up -d
-```
-
-To enable Open Telemetry Tracing, compose.telemetry.yaml file need to be merged along with default compose.yaml file.  
-CPU example with Open Telemetry feature:
-
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/intel/cpu/xeon/
-docker compose -f compose.yaml -f compose.telemetry.yaml up -d
-```
-
-It will automatically download the docker image on `docker hub`:
-
-```bash
-docker pull opea/chatqna:latest
-docker pull opea/chatqna-ui:latest
-```
-
-In following cases, you could build docker image from source by yourself.
-
-- Failed to download the docker image.
-
-- If you want to use a specific version of Docker image.
-
-Please refer to the 'Build Docker Images' in [Guide](docker_compose/intel/cpu/xeon/README.md).
-
-### QuickStart: 3.Consume the ChatQnA Service
-
-```bash
-curl http://${host_ip}:8888/v1/chatqna \
-    -H "Content-Type: application/json" \
-    -d '{
-        "messages": "What is the revenue of Nike in 2023?"
-    }'
-```
-
-## Architecture and Deploy details
+## Architecture
 
 ChatQnA architecture shows below:
 ![architecture](./assets/img/chatqna_architecture.png)
@@ -243,121 +118,24 @@ Change the `xxx_MODEL_ID` in `docker_compose/xxx/set_env.sh` for your needs.
 
 For customers with proxy issues, the models from [ModelScope](https://www.modelscope.cn/models) are also supported in ChatQnA. Refer to [this readme](docker_compose/intel/cpu/xeon/README.md) for details.
 
-### Deploy ChatQnA on Gaudi
+## 🤖 Automated Terraform Deployment using Intel® Optimized Cloud Modules for **Terraform**
 
-Find the corresponding [compose.yaml](./docker_compose/intel/hpu/gaudi/compose.yaml).
+| Cloud Provider       | Intel Architecture                | Intel Optimized Cloud Module for Terraform                                                                                         | Comments                                                             |
+| -------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| AWS                  | 4th Gen Intel Xeon with Intel AMX | [AWS Module](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna)                          | Uses meta-llama/Meta-Llama-3-8B-Instruct by default                  |
+| AWS Falcon2-11B      | 4th Gen Intel Xeon with Intel AMX | [AWS Module with Falcon11B](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna-falcon11B) | Uses TII Falcon2-11B LLM Model                                       |
+| GCP                  | 5th Gen Intel Xeon with Intel AMX | [GCP Module](https://github.com/intel/terraform-intel-gcp-vm/tree/main/examples/gen-ai-xeon-opea-chatqna)                          | Also supports Confidential AI by using Intel® TDX with 4th Gen Xeon |
+| Azure                | 5th Gen Intel Xeon with Intel AMX | Work-in-progress                                                                                                                   | Work-in-progress                                                     |
+| Intel Tiber AI Cloud | 5th Gen Intel Xeon with Intel AMX | Work-in-progress                                                                                                                   | Work-in-progress                                                     |
 
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/intel/hpu/gaudi/
-docker compose up -d
-```
+## Automated Deployment to Ubuntu based system(if not using Terraform) using Intel® Optimized Cloud Modules for **Ansible**
 
-To enable Open Telemetry Tracing, compose.telemetry.yaml file need to be merged along with default compose.yaml file.
-
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/intel/hpu/gaudi/
-docker compose -f compose.yaml -f compose.telemetry.yaml up -d
-```
-
-Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) to build docker images from source.
-
-### Deploy ChatQnA on Xeon
-
-Find the corresponding [compose.yaml](./docker_compose/intel/cpu/xeon/compose.yaml).
-
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/intel/cpu/xeon/
-docker compose up -d
-```
-
-To enable Open Telemetry Tracing, compose.telemetry.yaml file need to be merged along with default compose.yaml file.
-
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/intel/cpu/xeon/
-docker compose -f compose.yaml -f compose.telemetry.yaml up -d
-```
-
-Refer to the [Xeon Guide](./docker_compose/intel/cpu/xeon/README.md) for more instructions on building docker images from source.
-
-### Deploy ChatQnA on NVIDIA GPU
-
-```bash
-cd GenAIExamples/ChatQnA/docker_compose/nvidia/gpu/
-docker compose up -d
-```
-
-Refer to the [NVIDIA GPU Guide](./docker_compose/nvidia/gpu/README.md) for more instructions on building docker images from source.
-
-### Deploy ChatQnA on Kubernetes using Helm Chart
-
-Refer to the [ChatQnA helm chart](./kubernetes/helm/README.md) for instructions on deploying ChatQnA on Kubernetes.
-
-### Deploy ChatQnA on AI PC
-
-Refer to the [AI PC Guide](./docker_compose/intel/cpu/aipc/README.md) for instructions on deploying ChatQnA on AI PC.
-
-### Deploy ChatQnA on Red Hat OpenShift Container Platform (RHOCP)
-
-Refer to the [Intel Technology enabling for Openshift readme](https://github.com/intel/intel-technology-enabling-for-openshift/blob/main/workloads/opea/chatqna/README.md) for instructions to deploy ChatQnA prototype on RHOCP with [Red Hat OpenShift AI (RHOAI)](https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai).
-
-## Consume ChatQnA Service with RAG
-
-### Check Service Status
-
-Before consuming ChatQnA Service, make sure the vLLM/TGI service is ready, which takes some time.
-
-```bash
-# vLLM example
-docker logs vllm-gaudi-server 2>&1 | grep complete
-# TGI example
-docker logs tgi-gaudi-server | grep Connected
-```
-
-Consume ChatQnA service until you get the response like below.
-
-```log
-# vLLM
-INFO: Application startup complete.
-# TGI
-2024-09-03T02:47:53.402023Z  INFO text_generation_router::server: router/src/server.rs:2311: Connected
-```
-
-### Upload RAG Files (Optional)
-
-To chat with retrieved information, you need to upload a file using `Dataprep` service.
-
-Here is an example of `Nike 2023` pdf.
-
-```bash
-# download pdf file
-wget https://raw.githubusercontent.com/opea-project/GenAIComps/v1.1/comps/retrievers/redis/data/nke-10k-2023.pdf
-# upload pdf file with dataprep
-curl -X POST "http://${host_ip}:6007/v1/dataprep/ingest" \
-    -H "Content-Type: multipart/form-data" \
-    -F "files=@./nke-10k-2023.pdf"
-```
-
-### Consume Chat Service
-
-Two ways of consuming ChatQnA Service:
-
-1. Use cURL command on terminal
-
-   ```bash
-   curl http://${host_ip}:8888/v1/chatqna \
-       -H "Content-Type: application/json" \
-       -d '{
-           "messages": "What is the revenue of Nike in 2023?"
-       }'
-   ```
-
-2. Access via frontend
-
-   To access the frontend, open the following URL in your browser: `http://{host_ip}:5173`
-
-   By default, the UI runs on port 5173 internally.
-
-   If you choose conversational UI, use this URL: `http://{host_ip}:5174`
+To deploy to existing Xeon Ubuntu based system, use our Intel Optimized Cloud Modules for Ansible. This is the same Ansible playbook used by Terraform.
+Use this if you are not using Terraform and have provisioned your system with another tool or manually including bare metal.
+| Operating System | Intel Optimized Cloud Module for Ansible |
+|------------------|------------------------------------------|
+| Ubuntu 20.04 | [ChatQnA Ansible Module](https://github.com/intel/optimized-cloud-recipes/tree/main/recipes/ai-opea-chatqna-xeon) |
+| Ubuntu 22.04 | Work-in-progress |
 
 ## Troubleshooting
 
