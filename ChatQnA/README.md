@@ -7,16 +7,17 @@ RAG bridges the knowledge gap by dynamically fetching relevant information from 
 # Table of contents
 
 1. [Architecture and Deploy Details](#architecture-and-deploy-details)
-2. [Automated Terraform Deployment](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
-3. [Automated Deployment to Ubuntu based system](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
-4. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
+2. [Deployment Options](#deployment-options)
+3. [Automated Terraform Deployment](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
+4. [Automated Deployment to Ubuntu based system](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
+5. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
 
 ## Architecture
 
-ChatQnA architecture shows below:
+The ChatQnA application is a customizable end to end workflow that leverages the capablities of LLM's and RAG effeciently. ChatQnA architecture shows below:
 ![architecture](./assets/img/chatqna_architecture.png)
 
-The ChatQnA example is implemented using the component-level microservices defined in [GenAIComps](https://github.com/opea-project/GenAIComps). The flow chart below shows the information flow between different microservices for this example.
+This application is modular as it leverages each component as a microservice(as defined in [GenAIComps](https://github.com/opea-project/GenAIComps)) that can scale independently. It compises of data preparation, embedding , retrival, reranker(optinal) and LLM microservices. All these microservices are stiched together by the Chatqna megaservice that orchestrates the data through these microservices.The flow chart below shows the information flow between different microservices for this example.
 
 ```mermaid
 ---
@@ -92,31 +93,15 @@ flowchart LR
 
 ```
 
-This ChatQnA use case performs RAG using LangChain, Redis VectorDB and Text Generation Inference on [Intel Gaudi2](https://www.intel.com/content/www/us/en/products/details/processors/ai-accelerators/gaudi-overview.html) or [Intel Xeon Scalable Processors](https://www.intel.com/content/www/us/en/products/details/processors/xeon.html).
-In the below, we provide a table that describes for each microservice component in the ChatQnA architecture, the default configuration of the open source project, hardware, port, and endpoint.
+## Deployment Options
 
-Gaudi default compose.yaml
-| MicroService | Open Source Project | HW | Port | Endpoint |
-| ------------ | ------------------- | ----- | ---- | -------------------- |
-| Embedding | Langchain | Xeon | 6000 | /v1/embeddings |
-| Retriever | Langchain, Redis | Xeon | 7000 | /v1/retrieval |
-| Reranking | Langchain, TEI | Gaudi | 8000 | /v1/reranking |
-| LLM | Langchain, TGI | Gaudi | 9000 | /v1/chat/completions |
-| Dataprep | Redis, Langchain | Xeon | 6007 | /v1/dataprep/ingest |
 
-### Required Models
-
-By default, the embedding, reranking and LLM models are set to a default value as listed below:
-
-| Service   | Model                               |
+| Hardware  | Deployment Guide                    |
 | --------- | ----------------------------------- |
-| Embedding | BAAI/bge-base-en-v1.5               |
-| Reranking | BAAI/bge-reranker-base              |
-| LLM       | meta-llama/Meta-Llama-3-8B-Instruct |
+| Intel      | [Xeon](./docker_compose/intel/cpu/xeon) , [AI PC](./docker_compose/intel/cpu/aipc), [Gaudi](./docker_compose/intel/hpu/gaudi)                 |
+| Nvidia     | [GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu)  |
+| AMD     | [Rocm](./docker_compose/amd/gpu/rocm) |
 
-Change the `xxx_MODEL_ID` in `docker_compose/xxx/set_env.sh` for your needs.
-
-For customers with proxy issues, the models from [ModelScope](https://www.modelscope.cn/models) are also supported in ChatQnA. Refer to [this readme](docker_compose/intel/cpu/xeon/README.md) for details.
 
 ## 🤖 Automated Terraform Deployment using Intel® Optimized Cloud Modules for **Terraform**
 
