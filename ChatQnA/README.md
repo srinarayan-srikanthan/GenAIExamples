@@ -99,7 +99,7 @@ flowchart LR
 The table below shows different deployment options to choose from. They outline in detail the implementation of this example on the selected hardware.
 
 | Category | Deployment Option | Description |
-|------------------|------------------------------------------|
+|------------------|------------|------------------------------|
 | On-premise Deployments | Docker compose | Xeon |
 | | | AI PC |
 | | | Gaudi |
