@@ -98,15 +98,22 @@ flowchart LR
 
 The table below shows different deployment options to choose from. They outline in detail the implementation of this example on the selected hardware.
 
-| Hardware  | Deployment Guide                    |
-| --------- | ----------------------------------- |
-| Intel     |                                     |
-| ├── Xeon  | [Xeon](./docker_compose/intel/cpu/xeon) |
-| ├── AI PC | [AI PC](./docker_compose/intel/cpu/aipc) |
-| ├── Gaudi | [Gaudi](./docker_compose/intel/hpu/gaudi) |
-| Nvidia    | [GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100)](./docker_compose/nvidia/gpu)  |
-| AMD       | [Rocm](./docker_compose/amd/gpu/rocm) |
+| Category | Deployment Option | Description |
+|------------------|------------------------------------------|
+| On-premise Deployments | Docker compose | Xeon |
+| | | AI PC |
+| | | Gaudi |
+| | | Nvidia GPU |
+| | | AMD ROCM |
+| Ubuntu 22.04 | Work-in-progress | test |
 
+
+
+| Hardware  | Deployment Option                    |
+| --------- | ----------------------------------- |
+| Intel      | [Xeon](./docker_compose/intel/cpu/xeon) , [AI PC](./docker_compose/intel/cpu/aipc), [Gaudi](./docker_compose/intel/hpu/gaudi)                 |
+| Nvidia     | [GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu)  |
+| AMD     | [Rocm](./docker_compose/amd/gpu/rocm) |
 
 ## 🤖 Automated Terraform Deployment using Intel® Optimized Cloud Modules for **Terraform**
 
