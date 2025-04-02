@@ -15,6 +15,7 @@ RAG bridges the knowledge gap by dynamically fetching relevant information from 
 ## Architecture
 
 The ChatQnA application is a customizable end to end workflow that leverages the capablities of LLM's and RAG effeciently. ChatQnA architecture shows below:
+
 ![architecture](./assets/img/chatqna_architecture.png)
 
 This application is modular as it leverages each component as a microservice(as defined in [GenAIComps](https://github.com/opea-project/GenAIComps)) that can scale independently. It compises of data preparation, embedding , retrival, reranker(optinal) and LLM microservices. All these microservices are stiched together by the Chatqna megaservice that orchestrates the data through these microservices.The flow chart below shows the information flow between different microservices for this example.
@@ -95,12 +96,16 @@ flowchart LR
 
 ## Deployment Options
 
+The table below shows different deployment options to choose from. They outline in detail the implementation of this example on the selected hardware.
 
 | Hardware  | Deployment Guide                    |
 | --------- | ----------------------------------- |
-| Intel      | [Xeon](./docker_compose/intel/cpu/xeon) , [AI PC](./docker_compose/intel/cpu/aipc), [Gaudi](./docker_compose/intel/hpu/gaudi)                 |
-| Nvidia     | [GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu)  |
-| AMD     | [Rocm](./docker_compose/amd/gpu/rocm) |
+| Intel     |                                     |
+| ├── Xeon  | [Xeon](./docker_compose/intel/cpu/xeon) |
+| ├── AI PC | [AI PC](./docker_compose/intel/cpu/aipc) |
+| ├── Gaudi | [Gaudi](./docker_compose/intel/hpu/gaudi) |
+| Nvidia    | [GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100)](./docker_compose/nvidia/gpu)  |
+| AMD       | [Rocm](./docker_compose/amd/gpu/rocm) |
 
 
 ## 🤖 Automated Terraform Deployment using Intel® Optimized Cloud Modules for **Terraform**
