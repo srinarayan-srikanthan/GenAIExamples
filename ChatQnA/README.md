@@ -8,9 +8,7 @@ RAG bridges the knowledge gap by dynamically fetching relevant information from 
 
 1. [Architecture and Deploy Details](#architecture-and-deploy-details)
 2. [Deployment Options](#deployment-options)
-3. [Automated Terraform Deployment](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
-4. [Automated Deployment to Ubuntu based system](#automated-deployment-to-ubuntu-based-systemif-not-using-terraform-using-intel-optimized-cloud-modules-for-ansible)
-5. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
+3. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
 
 ## Architecture
 
@@ -100,43 +98,19 @@ The table below shows different deployment options to choose from. They outline 
 
 | Category | Deployment Option | Description |
 |------------------|------------|------------------------------|
-| On-premise Deployments | Docker compose | [Xeon](./docker_compose/intel/cpu/xeon) |
-| | | [AI PC](./docker_compose/intel/cpu/aipc) |
-| | | [Gaudi](./docker_compose/intel/hpu/gaudi) |
-| | | [Nvidia GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu) |
-| | | [AMD Rocm](./docker_compose/amd/gpu/rocm) |
+| On-premise Deployments | Docker compose | [ChatQnA deployment on Xeon](./docker_compose/intel/cpu/xeon) |
+| | | [ChatQnA deployment on  AI PC](./docker_compose/intel/cpu/aipc) |
+| | | [ChatQnA deployment on  Gaudi](./docker_compose/intel/hpu/gaudi) |
+| | | [ChatQnA deployment on  Nvidia GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu) |
+| | | [ChatQnA deployment on  AMD Rocm](./docker_compose/amd/gpu/rocm) |
 | | kubernetes | [helm charts](./kubernetes/helm)|
-| Cloud Servie Providers Terraform deployments |AWS | [Terraform deployment on 4th Gen Intel Xeon with Intel AMX using meta-llama/Meta-Llama-3-8B-Instruct ](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna) |
+| Cloud Servie Providers |AWS | [Terraform deployment on 4th Gen Intel Xeon with Intel AMX using meta-llama/Meta-Llama-3-8B-Instruct ](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna) |
 |  | | [Terraform deployment on 4th Gen Intel Xeon with Intel AMX using TII Falcon2-11B](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna-falcon11B) |
 | | GCP | [Terraform deployment on 5th Gen Intel Xeon with Intel AMX(support Confidential AI by using Intel® TDX](https://github.com/intel/terraform-intel-gcp-vm/tree/main/examples/gen-ai-xeon-opea-chatqna) |
 | | Azure | Work-in-progress  |
 | | Intel Tiber AI Cloud | Work-in-progress |
+| | Any Xeon based Ubuntu system | [ChatQnA Ansible Module for Ubuntu 20.04](https://github.com/intel/optimized-cloud-recipes/tree/main/recipes/ai-opea-chatqna-xeon) . Use this if you are not using Terraform and have provisioned your system with another tool or manually including bare metal. |
 
-
-| Hardware  | Deployment Option                    |
-| --------- | ----------------------------------- |
-| Intel      | [Xeon](./docker_compose/intel/cpu/xeon) , [AI PC](./docker_compose/intel/cpu/aipc), [Gaudi](./docker_compose/intel/hpu/gaudi)                 |
-| Nvidia     | [GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu)  |
-| AMD     | [Rocm](./docker_compose/amd/gpu/rocm) |
-
-## 🤖 Automated Terraform Deployment using Intel® Optimized Cloud Modules for **Terraform**
-
-| Cloud Provider       | Intel Architecture                | Intel Optimized Cloud Module for Terraform                                                                                         | Comments                                                             |
-| -------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| AWS                  | 4th Gen Intel Xeon with Intel AMX | [AWS Module](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna)                          | Uses meta-llama/Meta-Llama-3-8B-Instruct by default                  |
-| AWS Falcon2-11B      | 4th Gen Intel Xeon with Intel AMX | [AWS Module with Falcon11B](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna-falcon11B) | Uses TII Falcon2-11B LLM Model                                       |
-| GCP                  | 5th Gen Intel Xeon with Intel AMX | [GCP Module](https://github.com/intel/terraform-intel-gcp-vm/tree/main/examples/gen-ai-xeon-opea-chatqna)                          | Also supports Confidential AI by using Intel® TDX with 4th Gen Xeon |
-| Azure                | 5th Gen Intel Xeon with Intel AMX | Work-in-progress                                                                                                                   | Work-in-progress                                                     |
-| Intel Tiber AI Cloud | 5th Gen Intel Xeon with Intel AMX | Work-in-progress                                                                                                                   | Work-in-progress                                                     |
-
-## Automated Deployment to Ubuntu based system(if not using Terraform) using Intel® Optimized Cloud Modules for **Ansible**
-
-To deploy to existing Xeon Ubuntu based system, use our Intel Optimized Cloud Modules for Ansible. This is the same Ansible playbook used by Terraform.
-Use this if you are not using Terraform and have provisioned your system with another tool or manually including bare metal.
-| Operating System | Intel Optimized Cloud Module for Ansible |
-|------------------|------------------------------------------|
-| Ubuntu 20.04 | [ChatQnA Ansible Module](https://github.com/intel/optimized-cloud-recipes/tree/main/recipes/ai-opea-chatqna-xeon) |
-| Ubuntu 22.04 | Work-in-progress |
 
 ## Troubleshooting
 
