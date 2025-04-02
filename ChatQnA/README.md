@@ -100,13 +100,17 @@ The table below shows different deployment options to choose from. They outline 
 
 | Category | Deployment Option | Description |
 |------------------|------------|------------------------------|
-| On-premise Deployments | Docker compose | Xeon |
-| | | AI PC |
-| | | Gaudi |
-| | | Nvidia GPU |
-| | | AMD ROCM |
-| Ubuntu 22.04 | Work-in-progress | test |
-
+| On-premise Deployments | Docker compose | [Xeon](./docker_compose/intel/cpu/xeon) |
+| | | [AI PC](./docker_compose/intel/cpu/aipc) |
+| | | [Gaudi](./docker_compose/intel/hpu/gaudi) |
+| | | [Nvidia GPU (Turing, Ampere 80, Ampere 86, Ada Lovelace, H100](./docker_compose/nvidia/gpu) |
+| | | [AMD Rocm](./docker_compose/amd/gpu/rocm) |
+| | kubernetes | [helm charts](./kubernetes/helm)|
+| Cloud Servie Providers Terraform deployments |AWS | [Terraform deployment on 4th Gen Intel Xeon with Intel AMX using meta-llama/Meta-Llama-3-8B-Instruct ](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna) |
+|  | | [Terraform deployment on 4th Gen Intel Xeon with Intel AMX using TII Falcon2-11B](https://github.com/intel/terraform-intel-aws-vm/tree/main/examples/gen-ai-xeon-opea-chatqna-falcon11B) |
+| | GCP | [Terraform deployment on 5th Gen Intel Xeon with Intel AMX(support Confidential AI by using Intel® TDX](https://github.com/intel/terraform-intel-gcp-vm/tree/main/examples/gen-ai-xeon-opea-chatqna) |
+| | Azure | Work-in-progress  |
+| | Intel Tiber AI Cloud | Work-in-progress |
 
 
 | Hardware  | Deployment Option                    |
