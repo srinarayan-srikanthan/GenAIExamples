@@ -6,7 +6,7 @@ RAG bridges the knowledge gap by dynamically fetching relevant information from 
 
 # Table of contents
 
-1. [Architecture and Deploy Details](#architecture-and-deploy-details)
+1. [Architecture](#architecture-and-deploy-details)
 2. [Deployment Options](#deployment-options)
 3. [Monitoring and Tracing](#monitoring-opea-service-with-prometheus-and-grafana-dashboard)
 
