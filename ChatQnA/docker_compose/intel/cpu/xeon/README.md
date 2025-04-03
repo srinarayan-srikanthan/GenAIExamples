@@ -44,11 +44,11 @@ Some HuggingFace resources, such as some models, are only accessible if you have
 To set up environment variables for deploying ChatQnA services, set up some paremeters specific to the deployment environment and source the _setup_env.sh_ script in this directory:
 
 ```
-export host_ip="External_Public_IP" #ip address of the node
+export host_ip="External_Public_IP"           #ip address of the node
 export HUGGINGFACEHUB_API_TOKEN="Your_Huggingface_API_Token" 
- export http_proxy="Your_HTTP_Proxy" #http proxy if any
-export https_proxy="Your_HTTPs_Proxy" #https proxy if any
-export no_proxy=localhost,127.0.0.1,$host_ip #additional no proxies if needed
+export http_proxy="Your_HTTP_Proxy"           #http proxy if any
+export https_proxy="Your_HTTPs_Proxy"         #https proxy if any
+export no_proxy=localhost,127.0.0.1,$host_ip  #additional no proxies if needed
 export no_proxy=$no_proxy,chatqna-xeon-ui-server,chatqna-xeon-backend-server,dataprep-redis-service,tei-embedding-service,retriever,tei-reranking-service,tgi-service,vllm-service,llm-faqgen
 source ./set_env.sh
 ```
