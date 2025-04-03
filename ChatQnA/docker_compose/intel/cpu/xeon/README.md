@@ -88,8 +88,9 @@ Please refer to the table below to build different microservices from source:
 | Retriever | https://github.com/opea-project/GenAIComps/tree/main/comps/retrievers|
 | Reranker | https://github.com/opea-project/GenAIComps/tree/main/comps/rerankings |
 | LLM | https://github.com/opea-project/GenAIComps/tree/main/comps/llms|
-| Megaservice | WIP |
-| UI | WIP |
+| Megaservice | [Megaservice build guide](../../../../README_miscellaneous.md#Build-MegaService-Docker-Image) |
+| UI | [Megaservice build guide]() |
+| Conversational UI | |
 
 ### Check the Deployment Status
 
