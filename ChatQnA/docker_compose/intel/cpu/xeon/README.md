@@ -5,8 +5,8 @@ This document outlines the single node deployment process for a ChatQnA applicat
 # Table of contents
 
 1. [ChatQnA Quick Start deployment](#chatqna-quick-start-deployment)
-2. [ChatQnA Docker Compose file Options](#)
-3. [ChatQnA Configuration](#)
+2. [ChatQnA Docker Compose file Options](#chatqna-docker-compose-files)
+3. [ChatQnA with Conversational UI](#chatqna-with-conversational-ui-(optional))
    
 ## ChatQnA Quick Start deployment
 
@@ -73,7 +73,7 @@ CPU example with Open Telemetry feature:
 docker compose -f compose.yaml -f compose.telemetry.yaml up -d
 ```
 
-NB: You should build docker image from source by yourself if:
+**Note**: You should build docker image from source by yourself if:
 
 - You are developing off the git main branch (as the container's ports in the repo may be different from the published docker image).
 - You can't download the docker image.
@@ -117,7 +117,7 @@ curl http://${host_ip}:8888/v1/chatqna \
         "messages": "What is the revenue of Nike in 2023?"
     }'
 ```
-**Note** : Access the ChatQnA UI by web browser is through port 80. Please confirm the `80` port is opened in the firewall.
+**Note** : Access the ChatQnA UI by web browser throug this URL: `http://${host_ip}:80`. Please confirm the `80` port is opened in the firewall. To validate each microservie used in the pipleline refer to the [Validate microservicess](#Validate-Microservices) section.
 
 ### Cleanup the Deployment
 
@@ -127,7 +127,58 @@ To stop the containers associated with the deployment, execute the following com
 docker compose -f compose.yaml down
 ```
 
+## ChatQnA Docker Compose Files
 
+In the context of deploying a ChatQnA pipeline on an Intel® Xeon® platform, we can pick and choose different vector databases, large language model serving frameworks, and remove pieces of the pipeline such as the reranker. The table below outlines the various configurations that are available as part of the application. These configurations can be used as templates and can be extended to different components available in ](https://github.com/opea-project/GenAIComps.git).
+
+| File | Description |
+|------------------|------------|
+| [compose.yaml]()  | Default compose file using vllm as serving framework and redis as vector database|
+| [compose_milvus.yaml](./compose_milvus.yaml) | The vector database utilized is Milvus. All other configurations remain the same as the default |
+| [compose_pinecone.yaml](./compose_pinecone.yaml) | The vector database utilized is Pinecone. All other configurations remain the same as the default  |
+| [compose_qdrant.yaml](./compose_qdrant.yaml) | The vector database utilized is Qdrant. All other configurations remain the same as the default  |
+| [compose_tgi.yaml](./compose_tgi.yaml) | The LLM serving framework is TGI. All other configurations remain the same as the default  |
+| [compose_without_rerank.yaml](./compose_without_rerank.yaml) | Default configuration without the reranker |
+| [compose.telemetry.yaml](./compose.telemetry.yaml) | Helper file for telemetry features for vllm. Can be used along with any compose files that serves vllm |
+| [compose_tgi.telemetry.yaml](./compose_tgi.telemetry.yaml) | Helper file for telemetry features for tgi. Can be used along with any compose files that serves tgi |
+
+
+## ChatQnA with Conversational UI (Optional)
+
+To access the Conversational UI (react based) frontend, modify the UI service in the `compose` file used to deploy. Replace `chaqna-xeon-ui-server` service with the `chatqna-xeon-conversation-ui-server` service as per the config below:
+
+```yaml
+chaqna-xeon-conversation-ui-server:
+  image: opea/chatqna-conversation-ui:latest
+  container_name: chatqna-xeon-conversation-ui-server
+  environment:
+    - APP_BACKEND_SERVICE_ENDPOINT=${BACKEND_SERVICE_ENDPOINT}
+    - APP_DATA_PREP_SERVICE_URL=${DATAPREP_SERVICE_ENDPOINT}
+  ports:
+    - "5174:80"
+  depends_on:
+    - chaqna-xeon-backend-server
+  ipc: host
+  restart: always
+```
+
+Once the services are up, open the following URL in your browser: http://{host_ip}:5174. By default, the UI runs on port 80 internally. If you prefer to use a different host port to access the frontend, you can modify the port mapping in the `compose.yaml` file as shown below:
+
+```yaml
+  chaqna-gaudi-conversation-ui-server:
+    image: opea/chatqna-conversation-ui:latest
+    ...
+    ports:
+      - "80:80"
+```
+
+Here is an example of running ChatQnA (default UI):
+
+![project-screenshot](../../../../assets/img/chat_ui_response.png)
+
+Here is an example of running ChatQnA with Conversational UI (React):
+
+![project-screenshot](../../../../assets/img/conversation_ui_response.png)
 
 ### Validate Microservices
 
@@ -201,16 +252,7 @@ For details on how to verify the correctness of the response, refer to [how-to-v
      -H 'Content-Type: application/json'
    ```
 
-5. FaqGen LLM Microservice (if enabled)
-
-```bash
-curl http://${host_ip}:${LLM_SERVICE_PORT}/v1/faqgen \
-  -X POST \
-  -d '{"query":"Text Embeddings Inference (TEI) is a toolkit for deploying and serving open source text embeddings and sequence classification models. TEI enables high-performance extraction for the most popular models, including FlagEmbedding, Ember, GTE and E5."}' \
-  -H 'Content-Type: application/json'
-```
-
-6. MegaService
+5. MegaService
 
    ```bash
     curl http://${host_ip}:8888/v1/chatqna -H "Content-Type: application/json" -d '{
@@ -218,7 +260,7 @@ curl http://${host_ip}:${LLM_SERVICE_PORT}/v1/faqgen \
           }'
    ```
 
-7. Nginx Service
+6. Nginx Service
 
    ```bash
    curl http://${host_ip}:${NGINX_PORT}/v1/chatqna \
@@ -226,7 +268,7 @@ curl http://${host_ip}:${LLM_SERVICE_PORT}/v1/faqgen \
        -d '{"messages": "What is the revenue of Nike in 2023?"}'
    ```
 
-8. Dataprep Microservice（Optional）
+7. Dataprep Microservice（Optional）
 
 If you want to update the default knowledge base, you can use the following commands:
 
@@ -365,59 +407,3 @@ Open a web browser and type "chrome://tracing" or "ui.perfetto.dev", and then lo
  to see the vLLM profiling result as below diagram.
 ![image](https://github.com/user-attachments/assets/55c7097e-5574-41dc-97a7-5e87c31bc286)
 
-## 🚀 Launch the UI
-
-### Launch with origin port
-
-To access the frontend, open the following URL in your browser: http://{host_ip}:5173. By default, the UI runs on port 5173 internally. If you prefer to use a different host port to access the frontend, you can modify the port mapping in the `compose.yaml` file as shown below:
-
-```yaml
-  chaqna-gaudi-ui-server:
-    image: opea/chatqna-ui:latest
-    ...
-    ports:
-      - "80:5173"
-```
-
-### Launch with Nginx
-
-If you want to launch the UI using Nginx, open this URL: `http://${host_ip}:${NGINX_PORT}` in your browser to access the frontend.
-
-## 🚀 Launch the Conversational UI (Optional)
-
-To access the Conversational UI (react based) frontend, modify the UI service in the `compose.yaml` file. Replace `chaqna-xeon-ui-server` service with the `chatqna-xeon-conversation-ui-server` service as per the config below:
-
-```yaml
-chaqna-xeon-conversation-ui-server:
-  image: opea/chatqna-conversation-ui:latest
-  container_name: chatqna-xeon-conversation-ui-server
-  environment:
-    - APP_BACKEND_SERVICE_ENDPOINT=${BACKEND_SERVICE_ENDPOINT}
-    - APP_DATA_PREP_SERVICE_URL=${DATAPREP_SERVICE_ENDPOINT}
-  ports:
-    - "5174:80"
-  depends_on:
-    - chaqna-xeon-backend-server
-  ipc: host
-  restart: always
-```
-
-Once the services are up, open the following URL in your browser: http://{host_ip}:5174. By default, the UI runs on port 80 internally. If you prefer to use a different host port to access the frontend, you can modify the port mapping in the `compose.yaml` file as shown below:
-
-```yaml
-  chaqna-gaudi-conversation-ui-server:
-    image: opea/chatqna-conversation-ui:latest
-    ...
-    ports:
-      - "80:80"
-```
-
-![project-screenshot](../../../../assets/img/chat_ui_init.png)
-
-Here is an example of running ChatQnA:
-
-![project-screenshot](../../../../assets/img/chat_ui_response.png)
-
-Here is an example of running ChatQnA with Conversational UI (React):
-
-![project-screenshot](../../../../assets/img/conversation_ui_response.png)
