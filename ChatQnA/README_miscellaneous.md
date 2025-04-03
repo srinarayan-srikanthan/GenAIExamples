@@ -1,3 +1,12 @@
+# Table of contents
+
+1. [Build MegaService Docker Image](#Build-MegaService-Docker-Image)
+2. [Build UI Docker Image](#Build-UI-Docker-Image)
+3. [Build Conversational React UI Docker Image](#Build-Conversational-React-UI-Docker-Imaged)
+4. [Troubleshooting](#Troubleshooting)
+5. [Monitoring OPEA Service with Prometheus and Grafana dashboard](#Monitoring-OPEA-Service-with-Prometheus-and-Grafana-dashboard)
+6. [Tracing Services with OpenTelemetry Tracing and Jaeger](#Tracing-Services-with-OpenTelemetry-Tracing-and-Jaeger)
+
 ## Build MegaService Docker Image
 
 To construct the Mega Service with Rerank, we utilize the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline within the `chatqna.py` Python script. Build MegaService Docker image via below command:
