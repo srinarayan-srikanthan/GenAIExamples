@@ -143,7 +143,7 @@ In the context of deploying a ChatQnA pipeline on an Intel® Xeon® platform, we
 | [compose_tgi.telemetry.yaml](./compose_tgi.telemetry.yaml) | Helper file for telemetry features for tgi. Can be used along with any compose files that serves tgi |
 
 
-## ChatQnA with Conversational UI Optional
+## ChatQnA with Conversational UI (Optional)
 
 To access the Conversational UI (react based) frontend, modify the UI service in the `compose` file used to deploy. Replace `chaqna-xeon-ui-server` service with the `chatqna-xeon-conversation-ui-server` service as per the config below:
 
