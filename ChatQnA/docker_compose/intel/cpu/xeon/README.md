@@ -1,4 +1,4 @@
-# Build Mega Service of ChatQnA on Xeon
+# Deploying ChatQnA on Intel® Xeon® Processors
 
 This document outlines the single node deployment process for a ChatQnA application utilizing the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline on Intel Xeon server. The steps include pulling Docker images, container deployment via Docker Compose, and service execution to integrate microservices such as `embedding`, `retriever`, `rerank`,`llm` and `faqgen`.
 
@@ -37,7 +37,7 @@ git checkout v1.2
 
 ### Generate a HuggingFace Access Token
 
-Some HuggingFace resources, such as some models, are only accessible if you have an access token. If you do not already have a HuggingFace access token, you can create one by first creating an account by following the steps provided at [HuggingFace](https://huggingface.co/) and then generating a [user access token](https://huggingface.co/docs/transformers.js/en/guides/private#step-1-generating-a-user-access-token).
+Some HuggingFace resources, such as some models, are only accessible if the developer have an access token. In the absence of a HuggingFace access token, the developer can create one by first creating an account by following the steps provided at [HuggingFace](https://huggingface.co/) and then generating a [user access token](https://huggingface.co/docs/transformers.js/en/guides/private#step-1-generating-a-user-access-token).
 
 ### Configure the Deployment Environment
 
@@ -57,7 +57,7 @@ Consult the section on [ChatQnA Service configuration](#chatqna-configuration) f
 
 ### Deploy the Services Using Docker Compose
 
-To deploy the ChatQnA services, execute the `docker compose up` command with the appropriate arguments. For a default deployment, execute:
+To deploy the ChatQnA services, execute the `docker compose up` command with the appropriate arguments. For a default deployment, execute the command below. It uses the 'compose.yaml' file.
 
 ```bash
 docker compose up -d
@@ -73,11 +73,11 @@ CPU example with Open Telemetry feature:
 docker compose -f compose.yaml -f compose.telemetry.yaml up -d
 ```
 
-**Note**: You should build docker image from source by yourself if:
+**Note**: developers should build docker image from source when:
 
-- You are developing off the git main branch (as the container's ports in the repo may be different from the published docker image).
-- You can't download the docker image.
-- You want to use a specific version of Docker image.
+- Developing off the git main branch (as the container's ports in the repo may be different from the published docker image).
+- Unable to download the docker image.
+- Use a specific version of Docker image.
 
 Please refer to the table below to build different microservices from source:
 
@@ -117,7 +117,8 @@ b98fa07a4f5c   opea/vllm:${RELEASE_VERSION}                                     
 4943e5f6cd80   ghcr.io/huggingface/text-embeddings-inference:cpu-1.2   "text-embeddings-rou…"   32 hours ago   Up 2 hours   0.0.0.0:8808->80/tcp, :::8808->80/tcp    
 ```
 
-If you are facing any issues during deployment, refer to the [troubleshooting](../../../../README_miscellaneous.md##Troubleshooting) section.
+If tany issues are encountered during deployment, refer to the [troubleshooting](../../../../README_miscellaneous.md##Troubleshooting) section.
+
 ### Test the Pipeline
 
 Once the ChatQnA services are running, test the pipeline using the following command:
@@ -174,7 +175,7 @@ chaqna-xeon-conversation-ui-server:
   restart: always
 ```
 
-Once the services are up, open the following URL in your browser: http://{host_ip}:5174. By default, the UI runs on port 80 internally. If you prefer to use a different host port to access the frontend, you can modify the port mapping in the `compose.yaml` file as shown below:
+Once the services are up, open the following URL in the browser: http://{host_ip}:5174. By default, the UI runs on port 80 internally. If the developer prefers to use a different host port to access the frontend, it can be modiied by port mapping in the `compose.yaml` file as shown below:
 
 ```yaml
   chaqna-gaudi-conversation-ui-server:
@@ -419,3 +420,6 @@ Open a web browser and type "chrome://tracing" or "ui.perfetto.dev", and then lo
  to see the vLLM profiling result as below diagram.
 ![image](https://github.com/user-attachments/assets/55c7097e-5574-41dc-97a7-5e87c31bc286)
 
+## Conclusion
+
+This guide should enable developer to deploy the default configuration or any of the other compose yaml files for different configurations. It also highlights the configurable parameters that can be set before deployment.
