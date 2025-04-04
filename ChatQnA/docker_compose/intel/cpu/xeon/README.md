@@ -89,8 +89,8 @@ Please refer to the table below to build different microservices from source:
 | Reranker | https://github.com/opea-project/GenAIComps/tree/main/comps/rerankings |
 | LLM | https://github.com/opea-project/GenAIComps/tree/main/comps/llms|
 | Megaservice | [Megaservice build guide](../../../../README_miscellaneous.md#Build-MegaService-Docker-Image) |
-| UI | [Megaservice build guide]() |
-| Conversational UI | |
+| UI | [Megaservice build guide](../../../../README_miscellaneous.md#Build-UI-Docker-Image) |
+| Conversational UI | [Megaservice build guide](../../../../README_miscellaneous.md#Build-Conversational-React-UI-Docker-Image) |
 
 ### Check the Deployment Status
 
@@ -103,10 +103,21 @@ docker ps -a
 For the default deployment, the following 10 containers should have started:
 
 ```
-<todo>
+CONTAINER ID   IMAGE                                                   COMMAND                  CREATED        STATUS        PORTS                                                                                  NAMES
+3b5fa9a722da   opea/chatqna-ui:${RELEASE_VERSION}                                  "docker-entrypoint.s…"   32 hours ago   Up 2 hours   0.0.0.0:5173->5173/tcp, :::5173->5173/tcp                                              chatqna-xeon-ui-server
+d3b37f3d1faa   opea/chatqna:${RELEASE_VERSION}                                     "python chatqna.py"      32 hours ago   Up 2 hours   0.0.0.0:8888->8888/tcp, :::8888->8888/tcp                                              chatqna-xeon-backend-server
+b3e1388fa2ca   opea/reranking-tei:${RELEASE_VERSION}                               "python reranking_te…"   32 hours ago   Up 2 hours   0.0.0.0:8000->8000/tcp, :::8000->8000/tcp                                              reranking-tei-xeon-server
+24a240f8ad1c   opea/retriever-redis:${RELEASE_VERSION}                             "python retriever_re…"   32 hours ago   Up 2 hours   0.0.0.0:7000->7000/tcp, :::7000->7000/tcp                                              retriever-redis-server
+9c0d2a2553e8   opea/embedding-tei:${RELEASE_VERSION}                               "python embedding_te…"   32 hours ago   Up 2 hours   0.0.0.0:6000->6000/tcp, :::6000->6000/tcp                                              embedding-tei-server
+24cae0db1a70   opea/llm-vllm:${RELEASE_VERSION}                                    "bash entrypoint.sh"     32 hours ago   Up 2 hours   0.0.0.0:9000->9000/tcp, :::9000->9000/tcp                                              llm-vllm-server
+ea3986c3cf82   opea/dataprep-redis:${RELEASE_VERSION}                              "python prepare_doc_…"   32 hours ago   Up 2 hours   0.0.0.0:6007->6007/tcp, :::6007->6007/tcp                                              dataprep-redis-server
+e10dd14497a8   redis/redis-stack:7.2.0-v9                              "/entrypoint.sh"         32 hours ago   Up 2 hours   0.0.0.0:6379->6379/tcp, :::6379->6379/tcp, 0.0.0.0:8001->8001/tcp, :::8001->8001/tcp   redis-vector-db
+b98fa07a4f5c   opea/vllm:${RELEASE_VERSION}                                        "python3 -m vllm.ent…"   32 hours ago   Up 2 hours   0.0.0.0:9009->80/tcp, :::9009->80/tcp                                                  vllm-service
+79276cf45a47   ghcr.io/huggingface/text-embeddings-inference:cpu-1.2   "text-embeddings-rou…"   32 hours ago   Up 2 hours   0.0.0.0:6006->80/tcp, :::6006->80/tcp                                                  tei-embedding-server
+4943e5f6cd80   ghcr.io/huggingface/text-embeddings-inference:cpu-1.2   "text-embeddings-rou…"   32 hours ago   Up 2 hours   0.0.0.0:8808->80/tcp, :::8808->80/tcp    
 ```
 
-
+If you are facing any issues during deployment, refer to the [troubleshooting](../../../../README_miscellaneous.md##Troubleshooting) section.
 ### Test the Pipeline
 
 Once the ChatQnA services are running, test the pipeline using the following command:
