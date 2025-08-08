@@ -59,7 +59,7 @@ LLM_SERVER_HOST_IP = os.getenv("LLM_SERVER_HOST_IP", "0.0.0.0")
 LLM_SERVER_PORT = int(os.getenv("LLM_SERVER_PORT", 80))
 LLM_MODEL = os.getenv("LLM_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-
+VISION_MODE = os.getenv("VISION_MODE", False)
 
 def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **kwargs):
     if self.services[cur_node].service_type == ServiceType.EMBEDDING:
@@ -72,9 +72,11 @@ def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **k
             inputs.update(retriever_parameters.dict())
     elif self.services[cur_node].service_type == ServiceType.LLM:
         # convert TGI/vLLM to unified OpenAI /v1/chat/completions format
+        print("here:")
         next_inputs = {}
         next_inputs["model"] = LLM_MODEL
-        next_inputs["messages"] = [{"role": "user", "content": inputs["inputs"]}]
+        next_inputs["messages"] = [{"role": "user", "content": [{"type": "text", "text": inputs["text"]}, {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{inputs['image'][0]}"}}]}]
+        #next_inputs["messages"] = [{"role": "user","content": [{"type": "text",  "text": "What do you see in this image?"},{"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAlCAYAAADiMKHrAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAKPSURBVHgB7Zl/btowFMefnUTqf+MAHYMTjN4gvcGOABpM+8E0doLSE4xpsE3rKuAG3KC5Ad0J6MYOkP07YnvvhR9y0lVzupTIVT5SwDjB9fd97WfsMkCef1rUXM8dY9HHK4hWUevzi/oVWAqnF8fzLmAtiPA3Aq0lFsVA1fRKxlgNLIbDPaQUZQuu6YO98aIipHOiFGtIqaYfn1UnUCDds6WPyeANlTFbv9WztbFTK+HNUVAPiz7nbPzq7HsPCoKWIBREGfsJXZit5xT07X0jp6iRdIbEHOnjyyD97OvzH00lVS2K5OS2ax11cBXxJgYxlEIE6XZclzdTX6n8XjkkcEIfbj2nMO0/SNd1vy4vsCNjYPyEovfyy88GZIQCSKOCMf6ORgStoboLJuSWKDYCfK2q4jjrMZ+GOh7Pib/gek5DHxVUJtcgA7mJ4kwZRbN7viQXFzQn0Nl52gXG4Fo7DKAYp0yI3VHQ16oaWV0wYa+iGE8nG+wAdx5DzpS/KGyhFGULpShbKEXZQinqLlBK/IKc2asoh4sZvoXJWhlAzuxV1KBVD3HrfYTFAK8ZHgu0hu36DHLG+Izinw250WUkXHJht02QUnxLP7fZxR7f1I6S7Ir2GgmYvIQM5OYUuYBdainATq2ZjTqPBlnbGXYeBrg9Od18DKmc1U0jpw4OIIwEJFxQSl2b4MN2lf74fw8nFNbHt/5N9xWKTZvJ2S6YZk6RC3j2cKpVhSIShZ0mea6caCOCAjyNHd5gPPxGncMBTvI6hunYdaJ6kf8VoSCP2odxX6RkR6NOtanfj13EswKVqEQrPzzFL1lK+YvCFraiEqs8TrwQLGYraqpX4kr/Hixml+63Z+CoM9DTo438AUmP+KyMWT+tAAAAAElFTkSuQmCC"}}]}]
         next_inputs["max_tokens"] = llm_parameters_dict["max_tokens"]
         next_inputs["top_p"] = llm_parameters_dict["top_p"]
         next_inputs["stream"] = inputs["stream"]
@@ -381,11 +383,32 @@ class ChatQnAService:
         self.megaservice.flow_to(retriever, rerank)
         self.megaservice.flow_to(rerank, llm)
 
+    def add_remote_service_vision(self):
+
+        llm = MicroService(
+            name="llm",
+            host=LLM_SERVER_HOST_IP,
+            port=LLM_SERVER_PORT,
+            api_key=OPENAI_API_KEY,
+            endpoint="/v1/chat/completions",
+            use_remote_service=True,
+            service_type=ServiceType.LLM,
+        )
+        self.megaservice.add(llm)
+
+
     async def handle_request(self, request: Request):
         data = await request.json()
-        stream_opt = data.get("stream", True)
+        stream_opt = data.get("stream", False)
         chat_request = ChatCompletionRequest.parse_obj(data)
-        prompt = handle_message(chat_request.messages)
+        if VISION_MODE:
+            print("Vision mode enabled")
+            prompt,image = handle_message(chat_request.messages)
+            init_prompt = {"text": prompt, "image": image}
+        else:
+            print("Vision mode disabled")
+            prompt = handle_message(chat_request.messages)
+            init_prompt = {"text": prompt}
         parameters = LLMParams(
             max_tokens=chat_request.max_tokens if chat_request.max_tokens else 1024,
             top_k=chat_request.top_k if chat_request.top_k else 10,
@@ -410,7 +433,7 @@ class ChatQnAService:
             top_n=chat_request.top_n if chat_request.top_n else 1,
         )
         result_dict, runtime_graph = await self.megaservice.schedule(
-            initial_inputs={"text": prompt},
+            initial_inputs=init_prompt,
             llm_parameters=parameters,
             retriever_parameters=retriever_parameters,
             reranker_parameters=reranker_parameters,
@@ -453,7 +476,7 @@ if __name__ == "__main__":
     parser.add_argument("--without-rerank", action="store_true")
     parser.add_argument("--with-guardrails", action="store_true")
     parser.add_argument("--faqgen", action="store_true")
-
+    parser.add_argument("--vision", action="store_true") 
     args = parser.parse_args()
 
     chatqna = ChatQnAService(port=MEGA_SERVICE_PORT)
@@ -463,6 +486,8 @@ if __name__ == "__main__":
         chatqna.add_remote_service_with_guardrails()
     elif args.faqgen:
         chatqna.add_remote_service_faqgen()
+    elif args.vision:
+        chatqna.add_remote_service_vision()
     else:
         chatqna.add_remote_service()
 

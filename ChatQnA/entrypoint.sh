@@ -10,6 +10,8 @@ elif [[ $chatqna_arg == "CHATQNA_NO_RERANK" ]]; then
     python chatqna.py --without-rerank
 elif [[ $chatqna_arg == "CHATQNA_GUARDRAILS" ]]; then
     python chatqna.py --with-guardrails
+elif [[ $chatqna_arg == "CHATQNA_VISION" ]]; then
+    python chatqna.py --vision
 else
     python chatqna.py
 fi
