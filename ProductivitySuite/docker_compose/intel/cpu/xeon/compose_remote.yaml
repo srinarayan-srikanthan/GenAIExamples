@@ -133,7 +133,30 @@ services:
       LOGFLAG: ${LOGFLAG}
     ipc: host
     restart: always
-
+    
+   chatqna-xeon-backend-server-vision:
+    image: ${REGISTRY:-opea}/chatqna:${TAG:-latest}
+    container_name: chatqna-xeon-backend-server-vision
+    ports:
+      - "8889:8889"
+    environment:
+       no_proxy: ${no_proxy}
+       https_proxy: ${https_proxy}
+       http_proxy: ${http_proxy}
+       MEGA_SERVICE_HOST_IP: chatqna-xeon-backend-server
+       EMBEDDING_SERVER_HOST_IP: tei-embedding-service
+       EMBEDDING_SERVER_PORT: ${EMBEDDING_SERVER_PORT:-80}
+       RETRIEVER_SERVICE_HOST_IP: retriever
+       RERANK_SERVER_HOST_IP: tei-reranking-service
+       RERANK_SERVER_PORT: ${RERANK_SERVER_PORT:-80}
+       LLM_SERVER_HOST_IP: ${REMOTE_ENDPOINT}
+       OPENAI_API_KEY: ${API_KEY}
+       LLM_SERVER_PORT: ${LLM_SERVER_PORT:-80}
+       LLM_MODEL: ${LLM_MODEL_ID}
+       LOGFLAG: ${LOGFLAG}
+      CHATQNA_TYPE: ${CHATQNA_TYPE:-CHATQNA_VISION}
+      VISION_MODE: ${VISION_MODE:-True}
+  
   codegen-xeon-backend-server:
     image: ${REGISTRY:-opea}/codegen:${TAG:-latest}
     container_name: codegen-xeon-backend-server
