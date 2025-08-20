@@ -14,7 +14,7 @@ from comps.cores.proto.api_protocol import (
     ChatMessage,
     UsageInfo,
 )
-from comps.cores.proto.docarray import LLMParams
+from comps.cores.proto.docarray import LLMParams, OpenAIParams
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
@@ -76,7 +76,7 @@ def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **k
     elif self.services[cur_node].service_type == ServiceType.LLM:
         # convert TGI/vLLM to unified OpenAI /v1/chat/completions format
         next_inputs = {}
-        next_inputs["model"] = LLM_MODEL_ID
+        next_inputs["model"] = inputs["model"]
         next_inputs["messages"] = [{"role": "user", "content": inputs["query"]}]
         next_inputs["max_tokens"] = llm_parameters_dict["max_tokens"]
         next_inputs["top_p"] = llm_parameters_dict["top_p"]
@@ -184,6 +184,9 @@ class CodeGenService:
         # Get the agents flag from the request data, default to False if not provided
         agents_flag = data.get("agents_flag", False)
 
+        api_key = data.get("api_key", None)
+        base_url = data.get("base_url", None)
+
         # Define the LLM parameters
         parameters = LLMParams(
             max_tokens=chat_request.max_tokens if chat_request.max_tokens else 1024,
@@ -195,6 +198,7 @@ class CodeGenService:
             repetition_penalty=chat_request.repetition_penalty if chat_request.repetition_penalty else 1.03,
             stream=stream_opt,
             index_name=chat_request.index_name,
+            model=chat_request.model if chat_request.model else None,
         )
 
         # Initialize the initial inputs with the generated prompt
@@ -262,9 +266,14 @@ class CodeGenService:
             # Use the LLM microservice only
             megaservice = self.megaservice_llm
 
+        openai_params = OpenAIParams(
+            api_key=api_key,
+            base_url=base_url,
+        )
+
         # Schedule the final megaservice
         result_dict, runtime_graph = await megaservice.schedule(
-            initial_inputs=initial_inputs, llm_parameters=parameters
+            initial_inputs=initial_inputs, llm_parameters=parameters, openai_parameters=openai_params
         )
         for node, response in result_dict.items():
             # Check if the last microservice in the megaservice is LLM

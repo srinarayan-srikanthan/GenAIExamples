@@ -224,7 +224,8 @@ class DocSumService:
             chunk_overlap = data.get("chunk_overlap", -1)
             chat_request = ChatCompletionRequest.model_validate(data)
             prompt = handle_message(chat_request.messages)
-
+            api_key = data.get("api_key", None)
+            base_url = data.get("base_url", None)
             initial_inputs_data = {data["type"]: prompt}
 
         elif "multipart/form-data" in request.headers.get("content-type"):
@@ -234,7 +235,8 @@ class DocSumService:
             chunk_size = data.get("chunk_size", -1)
             chunk_overlap = data.get("chunk_overlap", -1)
             chat_request = ChatCompletionRequest.model_validate(data)
-
+            api_key = data.get("api_key", None)
+            base_url = data.get("base_url", None)
             data_type = data.get("type")
 
             file_summaries = []
@@ -292,6 +294,8 @@ class DocSumService:
             model=chat_request.model if chat_request.model else None,
             language=chat_request.language if chat_request.language else "auto",
             summary_type=summary_type,
+            api_key=api_key,
+            base_url=base_url,
             chunk_overlap=chunk_overlap,
             chunk_size=chunk_size,
         )

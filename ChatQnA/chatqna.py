@@ -15,7 +15,7 @@ from comps.cores.proto.api_protocol import (
     ChatMessage,
     UsageInfo,
 )
-from comps.cores.proto.docarray import LLMParams, RerankerParms, RetrieverParms
+from comps.cores.proto.docarray import LLMParams, RerankerParms, RetrieverParms, OpenAIParams
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 from langchain_core.prompts import PromptTemplate
@@ -73,7 +73,7 @@ def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **k
     elif self.services[cur_node].service_type == ServiceType.LLM:
         # convert TGI/vLLM to unified OpenAI /v1/chat/completions format
         next_inputs = {}
-        next_inputs["model"] = LLM_MODEL
+        next_inputs["model"] = inputs["model"]
         next_inputs["messages"] = [{"role": "user", "content": inputs["inputs"]}]
         next_inputs["max_tokens"] = llm_parameters_dict["max_tokens"]
         next_inputs["top_p"] = llm_parameters_dict["top_p"]
@@ -386,6 +386,8 @@ class ChatQnAService:
         stream_opt = data.get("stream", True)
         chat_request = ChatCompletionRequest.parse_obj(data)
         prompt = handle_message(chat_request.messages)
+        api_key = data.get("api_key", None)
+        base_url = data.get("base_url", None)
         parameters = LLMParams(
             max_tokens=chat_request.max_tokens if chat_request.max_tokens else 1024,
             top_k=chat_request.top_k if chat_request.top_k else 10,
@@ -409,11 +411,16 @@ class ChatQnAService:
         reranker_parameters = RerankerParms(
             top_n=chat_request.top_n if chat_request.top_n else 1,
         )
+        openai_params = OpenAIParams(
+            api_key=api_key,
+            base_url=base_url,
+        )
         result_dict, runtime_graph = await self.megaservice.schedule(
             initial_inputs={"text": prompt},
             llm_parameters=parameters,
             retriever_parameters=retriever_parameters,
             reranker_parameters=reranker_parameters,
+            openai_parameters=openai_params,
         )
         for node, response in result_dict.items():
             if isinstance(response, StreamingResponse):
