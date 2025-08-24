@@ -12,20 +12,15 @@ if command_exists docker; then
     echo "Docker is already installed"
 else
     echo "Installing Docker..."
-    # Clean APT cache and lists to avoid corrupted state
     apt-get clean
     rm -rf /var/lib/apt/lists/*
-    # Ensure non-interactive frontend to avoid debconf issues
     export DEBIAN_FRONTEND=noninteractive
-    # Update APT sources to use a reliable mirror
     echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -cs)-security main restricted universe multiverse" > /etc/apt/sources.list
     echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs) main restricted universe multiverse" >> /etc/apt/sources.list
     echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-updates main restricted universe multiverse" >> /etc/apt/sources.list
-    # Import Ubuntu GPG key
     apt-get update -o Acquire::AllowInsecureRepositories=true || true
     apt-get install -y ubuntu-keyring
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
-    # Update package index
     apt-get update || { echo "APT update failed, retrying..."; sleep 5; apt-get update; }
     apt-get install -y \
         ca-certificates \
@@ -54,12 +49,35 @@ echo "Starting vLLM inference endpoint..."
 echo "Using model: $INFERENCE_MODEL"
 echo "Using Docker image: $DOCKER_IMAGE"
 
-docker run \
+# Run Docker container in detached mode and capture container ID
+docker run -d \
     --pull always \
     -v ~/.cache/huggingface:/root/.cache/huggingface \
     --env "HUGGING_FACE_HUB_TOKEN=$HF_TOKEN" \
     -p 8080:8080 \
     --ipc=host \
+    --name vllm_container \
     $DOCKER_IMAGE \
     --model $INFERENCE_MODEL \
-    --max-model-len 2048
+    --max-model-len 2048 > /var/log/vllm_start.log 2>&1 || { echo "Docker run failed, check /var/log/vllm_start.log"; cat /var/log/vllm_start.log; exit 1; }
+
+# Wait for container to start and verify it's running
+sleep 10
+CONTAINER_ID=$(docker ps -q -f name=vllm_container)
+if [ -n "$CONTAINER_ID" ]; then
+    echo "vLLM container started: $CONTAINER_ID"
+    docker logs $CONTAINER_ID >> /var/log/vllm_start.log 2>&1
+    # Verify the vLLM endpoint is responsive
+    if curl --fail http://localhost:8080/health > /dev/null 2>&1; then
+        echo "vLLM endpoint is healthy"
+        exit 0  # Exit successfully to signal completion
+    else
+        echo "vLLM endpoint is not responding"
+        docker logs $CONTAINER_ID >> /var/log/vllm_start.log 2>&1
+        exit 1
+    fi
+else
+    echo "vLLM container failed to start, check logs"
+    cat /var/log/vllm_start.log
+    exit 1
+fi
