@@ -12,7 +12,21 @@ if command_exists docker; then
     echo "Docker is already installed"
 else
     echo "Installing Docker..."
-    apt-get update
+    # Clean APT cache and lists to avoid corrupted state
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    # Ensure non-interactive frontend to avoid debconf issues
+    export DEBIAN_FRONTEND=noninteractive
+    # Update APT sources to use a reliable mirror
+    echo "deb http://security.ubuntu.com/ubuntu $(lsb_release -cs)-security main restricted universe multiverse" > /etc/apt/sources.list
+    echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs) main restricted universe multiverse" >> /etc/apt/sources.list
+    echo "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-updates main restricted universe multiverse" >> /etc/apt/sources.list
+    # Import Ubuntu GPG key
+    apt-get update -o Acquire::AllowInsecureRepositories=true || true
+    apt-get install -y ubuntu-keyring
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
+    # Update package index
+    apt-get update || { echo "APT update failed, retrying..."; sleep 5; apt-get update; }
     apt-get install -y \
         ca-certificates \
         curl \
@@ -25,7 +39,6 @@ else
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     apt-get update
     apt-get install -y docker-ce docker-ce-cli containerd.io
-    # Use the admin username explicitly (match parameters.json)
     usermod -aG docker azureuser || echo "Failed to add user to docker group, continuing..."
     echo "Docker installed successfully"
 fi
@@ -48,4 +61,5 @@ docker run \
     -p 8080:8080 \
     --ipc=host \
     $DOCKER_IMAGE \
-    --model $INFERENCE_MODEL
+    --model $INFERENCE_MODEL \
+    --max-model-len 2048
