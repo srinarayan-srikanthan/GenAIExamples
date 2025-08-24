@@ -48,5 +48,4 @@ docker run \
     -p 8080:8080 \
     --ipc=host \
     $DOCKER_IMAGE \
-    --model $INFERENCE_MODEL \
-    --max-model-len 32768
+    --model $INFERENCE_MODEL
